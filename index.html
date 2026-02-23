@@ -365,6 +365,7 @@
 
             try {
                 // 1. 获取用户信息
+                /*
                 const userResponse = await fetch(`https://api.github.com/users/${GITHUB_USERNAME}`);
                 if (userResponse.ok) {
                     const userData = await userResponse.json();
@@ -372,6 +373,7 @@
                 } else {
                     bioElement.textContent = "Independent Developer & Security Researcher.";
                 }
+                */
 
                 // 2. 获取仓库列表 - 强制使用官方 API 以避免 CORS 问题
                 const repoResponse = await fetch(`https://api.github.com/users/${GITHUB_USERNAME}/repos?per_page=100&sort=updated`);
