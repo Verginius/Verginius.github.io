@@ -242,8 +242,8 @@
         <p class="bio" id="user-bio">2025-2026 City University of Hong Kong <br> 2018-2022 China University of Geosciences(Beijing) <br> C++/Computer Graphics/Machine Learning/Web 3</p>
         <div class="nav-links">
             <a href="repositories.html" id="nav-repos">REPOSITORIES</a>
-            <a href="photography.html" id="nav-photos">PHOTOGRAPHY</a>
             <a href="translations.html" id="nav-trans" class="active">TRANSLATIONS</a>
+            <a href="photography.html" id="nav-photos">PHOTOGRAPHY</a>           
             <a href="https://github.com/Verginius" target="_blank">GITHUB</a>
             <a href="mailto:contact@example.com">EMAIL</a>
         </div>
@@ -286,16 +286,37 @@
         document.getElementById('year').textContent = new Date().getFullYear();
         
         const USER_ID = 2888; // Based on previous fetch
+        const PROXY_URL = 'https://api.codetabs.com/v1/proxy?quest=';
+
+        /**
+         * 通用获取数据函数，包含 CORS 代理降级策略
+         */
+        async function fetchData(url) {
+            try {
+                // 1. 尝试直连
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`Direct fetch failed: ${response.status}`);
+                return await response.json();
+            } catch (err) {
+                console.warn(`Direct fetch failed for ${url}, trying proxy...`, err);
+                // 2. 如果直连失败（如 CORS 错误），尝试使用代理
+                try {
+                    const proxyResponse = await fetch(PROXY_URL + encodeURIComponent(url));
+                    if (!proxyResponse.ok) throw new Error(`Proxy fetch failed: ${proxyResponse.status}`);
+                    return await proxyResponse.json();
+                } catch (proxyErr) {
+                    console.error(`All fetch attempts failed for ${url}`, proxyErr);
+                    throw proxyErr; // 抛出最终错误
+                }
+            }
+        }
 
         async function fetchUserStats() {
             const statsGrid = document.getElementById('stats-grid');
             const statsLoading = document.getElementById('stats-loading');
             
             try {
-                const response = await fetch(`https://paratranz.cn/api/users/${USER_ID}`);
-                if (!response.ok) throw new Error('Stats API failed');
-                
-                const data = await response.json();
+                const data = await fetchData(`https://paratranz.cn/api/users/${USER_ID}`);
                 
                 document.getElementById('stat-translated').textContent = data.translated || 0;
                 document.getElementById('stat-edited').textContent = data.edited || 0;
@@ -306,7 +327,7 @@
                 statsGrid.style.display = 'grid';
             } catch (err) {
                 console.error('Stats fetch error:', err);
-                statsLoading.textContent = 'Stats unavailable';
+                statsLoading.textContent = 'Stats unavailable (CORS/Network error)';
             }
         }
 
@@ -316,14 +337,7 @@
             const error = document.getElementById('error');
 
             try {
-                // Fetch public project list for the user
-                const response = await fetch(`https://paratranz.cn/api/users/${USER_ID}/projects`);
-
-                if (!response.ok) {
-                    throw new Error(`API returned ${response.status}`);
-                }
-
-                const data = await response.json();
+                const data = await fetchData(`https://paratranz.cn/api/users/${USER_ID}/projects`);
                 
                 // The API returns an array of user project relations.
                 // Each item has a "project" object containing details.
@@ -341,22 +355,19 @@
 
                 loading.style.display = 'none';
 
-                if (projects.length === 0) {
-                    document.getElementById('trans-container').innerHTML = '<p style="text-align:center; color:var(--dim-color);">暂无参与的翻译项目。</p>';
+                if (!projects || projects.length === 0) {
+                    container.innerHTML = '<p style="text-align:center; color:var(--dim-color);">暂无参与的翻译项目。</p>';
                     return;
                 }
 
-                const container = document.getElementById('trans-container');
                 container.innerHTML = ''; // clear loading message if still there
 
                 projects.forEach(p => {
                     const card = document.createElement('a');
                     card.className = 'trans-card';
-                    // Paratranz project link
                     card.href = `https://paratranz.cn/projects/${p.id}`;
                     card.target = '_blank';
 
-                    // Handle logo URL
                     let logoUrl = p.logo;
                     if (logoUrl && !logoUrl.startsWith('http')) {
                         logoUrl = 'https://static.paratranz.cn' + logoUrl;
@@ -370,7 +381,6 @@
                                 <span class="trans-name">${p.name}</span>
                                 <span class="trans-game">${p.game || 'GAME'}</span>
                             </div>
-                            <!-- <p style="font-size: 0.8rem; color: var(--dim-color);">Status: Stage ${p.stage}</p> -->
                         </div>
                     `;
                     container.appendChild(card);
@@ -379,7 +389,7 @@
             } catch (err) {
                 console.error('Fetch error:', err);
                 loading.style.display = 'none';
-                error.textContent = '无法加载数据 / Unable to load data';
+                error.innerHTML = '无法加载数据 / Unable to load data<br><small style="font-size:0.8em; color:var(--dim-color);">' + err.message + '</small>';
                 error.style.display = 'block';
             }
         }
