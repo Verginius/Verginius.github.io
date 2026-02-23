@@ -72,6 +72,12 @@
             text-decoration: none;
             border-bottom: 1px solid transparent;
             font-size: 0.85rem;
+            cursor: pointer;
+        }
+        
+        /* Active link style */
+        .nav-links a.active {
+            border-bottom: var(--border-style);
         }
 
         .nav-links a:hover {
@@ -181,87 +187,6 @@
             .repo-header { flex-direction: column; }
             .repo-stats { margin-top: 0.5rem; }
         }
-
-        /* Photography Section Styles */
-        #photo-layout {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        #photo-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .photo-card {
-            border: var(--border-style);
-            aspect-ratio: 4/3;
-            overflow: hidden;
-            position: relative;
-            background-color: var(--hover-bg);
-        }
-
-        .photo-card img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-            display: block; 
-        }
-
-        .photo-card:hover img {
-            transform: scale(1.05);
-        }
-        
-        .pagination {
-            display: flex;
-            justify-content: center;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .pagination button {
-            background: none;
-            border: var(--border-style);
-            color: var(--text-color);
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-        }
-
-        .pagination button:hover:not(:disabled) {
-            background-color: var(--text-color);
-            color: var(--bg-color);
-        }
-        
-        .pagination button:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            border-color: var(--dim-color);
-        }
-        
-        .pagination-info {
-            text-align: center; 
-            font-size: 0.8rem;
-            color: var(--dim-color);
-            margin-top: 0.5rem;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .nav-links a.active {
-            border-bottom: var(--border-style);
-        }
-        
-        .nav-links a {
-            cursor: pointer;
-        }
     </style>
 </head>
 <body>
@@ -270,41 +195,94 @@
         <h1 id="username">LI Zhengxuan</h1>
         <p class="bio" id="user-bio">2025-2026 City University of Hong Kong <br> 2018-2022 China University of Geosciences(Beijing) <br> C++/Computer Graphics/Machine Learning/Web 3</p>
         <div class="nav-links">
-            <a onclick="showSection('repos')" id="nav-repos" class="active">REPOSITORIES</a>
-            <a onclick="showSection('photos')" id="nav-photos">PHOTOGRAPHY</a>
+            <a href="index.html" id="nav-repos" class="active">REPOSITORIES</a>
+            <a href="photography.html" id="nav-photos">PHOTOGRAPHY</a>
             <a href="https://github.com/Verginius" target="_blank">GITHUB</a>
-            <a href="lizhengxuan_2023@outlook.com">EMAIL</a>
+            <a href="mailto:contact@example.com">EMAIL</a>
         </div>
     </header>
 
     <main>
-        <div id="section-photos" class="hidden">
-            <div class="section-title">PHOTOGRAPHY</div>
-            <div id="photo-layout">
-                <div id="photo-container">
-                    <!-- Images will be loaded here -->
-                </div>
-                <div class="pagination">
-                    <button id="prev-btn" onclick="changePage(-1)">PREV</button>
-                    <button id="next-btn" onclick="changePage(1)">NEXT</button>
-                </div>
-                <div id="page-info" class="pagination-info">Page 1</div>
-            </div>
-        </div>
-
-        <div id="section-repos">
-
-        <div id="section-repos">
-            <div class="section-title">ORIGINAL REPOSITORIES</div>
-            <div id="loading">正在扫描原创仓库...</div>
-            <div id="error" style="display: none;">无法加载数据，可能是由于 GitHub API 速率限制。请稍后再试或直接访问 GitHub。</div>
-            <div id="repo-container"></div>
-        </div>
+        <div class="section-title">ORIGINAL REPOSITORIES</div>
+        <div id="loading">正在扫描原创仓库...</div>
+        <div id="error" style="display: none;">无法加载数据，可能是由于 GitHub API 速率限制。请稍后再试或直接访问 GitHub。</div>
+        <div id="repo-container"></div>
     </main>
 
+    <footer>
+        <span>&copy; <span id="year"></span> VERGINIUS</span>
+        <span>GENERATED VIA GITHUB API</span>
+    </footer>
+
     <script>
-        // Redirect to main content
-        window.location.replace("repositories.html");
+        const GITHUB_USERNAME = 'Verginius';
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        /**
+         * 改进的获取数据函数
+         * 移除了不可靠的镜像 API，直接使用官方 API 并增加异常捕捉
+         */
+        async function fetchGitHubData() {
+            const repoContainer = document.getElementById('repo-container');
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            //const bioElement = document.getElementById('user-bio');
+
+            try {
+                // 2. 获取仓库列表 - 强制使用官方 API 以避免 CORS 问题
+                const repoResponse = await fetch(`https://api.github.com/users/${GITHUB_USERNAME}/repos?per_page=100&sort=updated`);
+
+                if (!repoResponse.ok) {
+                    throw new Error(`GitHub API returned ${repoResponse.status}`);
+                }
+
+                const repos = await repoResponse.json();
+
+                // 3. 过滤出原创仓库 (fork === false)
+                const originalRepos = repos.filter(repo => !repo.fork);
+
+                loading.style.display = 'none';
+
+                if (originalRepos.length === 0) {
+                    repoContainer.innerHTML = '<p style="text-align:center; color:var(--dim-color);">没有找到原创仓库。</p>';
+                    return;
+                }
+
+                // 渲染
+                originalRepos.forEach(repo => {
+                    const card = document.createElement('a');
+                    card.className = 'repo-card';
+                    card.href = repo.html_url;
+                    card.target = '_blank';
+
+                    card.innerHTML = `
+                        <div class="repo-header">
+                            <span class="repo-name">${repo.name.toUpperCase()}</span>
+                            <span class="repo-stats">★ ${repo.stargazers_count} / ${repo.language || 'Plain'}</span>
+                        </div>
+                        <p class="repo-desc">${repo.description || 'No description available for this repository.'}</p>
+                        ${repo.language ? `<span class="repo-lang">${repo.language}</span>` : ''}
+                    `;
+                    repoContainer.appendChild(card);
+                });
+
+            } catch (err) {
+                console.error('Fetch error:', err);
+                loading.style.display = 'none';
+                error.style.display = 'block';
+                // 提供回退显示
+                repoContainer.innerHTML = `
+                    <p style="text-align:center; margin-top:1rem;">
+                        <a href="https://github.com/${GITHUB_USERNAME}?tab=repositories" target="_blank" style="color:var(--text-color);">
+                            请点击此处直接前往 GitHub 查看仓库列表列表内容
+                        </a>
+                    </p>
+                `;
+            }
+        }
+
+        // 初始化加载
+        window.addEventListener('DOMContentLoaded', fetchGitHubData);
     </script>
 </body>
 </html>
