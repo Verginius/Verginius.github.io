@@ -186,6 +186,51 @@
             h1 { font-size: 1.8rem; }
             .repo-header { flex-direction: column; }
             .repo-stats { margin-top: 0.5rem; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        /* Stats Grid Styles */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .stat-box {
+            border: var(--border-style);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-2px);
+            background: var(--hover-bg);
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 300;
+            line-height: 1.2;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--dim-color);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -204,6 +249,27 @@
     </header>
 
     <main>
+        <div class="section-title">CONTRIBUTIONS</div>
+        <div id="stats-loading" style="text-align: center; color: var(--dim-color); margin-bottom: 2rem;">Loading stats...</div>
+        <div class="stats-grid" id="stats-grid" style="display: none;">
+            <a href="https://github.com/search?q=author:Verginius&type=Commits" target="_blank" class="stat-box">
+                <div class="stat-value" id="stat-commits">-</div>
+                <div class="stat-label">Commits</div>
+            </a>
+            <a href="https://github.com/pulls?q=is:pr+reviewed-by:Verginius" target="_blank" class="stat-box">
+                <div class="stat-value" id="stat-reviews">-</div>
+                <div class="stat-label">Code Review</div>
+            </a>
+            <a href="https://github.com/pulls?q=is:pr+author:Verginius" target="_blank" class="stat-box">
+                <div class="stat-value" id="stat-prs">-</div>
+                <div class="stat-label">Pull Requests</div>
+            </a>
+             <a href="https://github.com/issues?q=is:issue+author:Verginius" target="_blank" class="stat-box">
+                <div class="stat-value" id="stat-issues">-</div>
+                <div class="stat-label">Issues</div>
+            </a>
+        </div>
+
         <div class="section-title">ORIGINAL REPOSITORIES</div>
         <div id="loading">正在扫描原创仓库...</div>
         <div id="error" style="display: none;">无法加载数据，可能是由于 GitHub API 速率限制。请稍后再试或直接访问 GitHub。</div>
@@ -220,10 +286,100 @@
         document.getElementById('year').textContent = new Date().getFullYear();
 
         /**
+         * 获取用户贡献统计数据
+         */
+        async function fetchContributionStats() {
+            const statsGrid = document.getElementById('stats-grid');
+            const statsLoading = document.getElementById('stats-loading');
+            
+            // 使用 localStorage 缓存数据 (1小时)，避免频繁触发 API 限制
+            const CACHE_KEY = `github_stats_${GITHUB_USERNAME}`;
+            const cached = localStorage.getItem(CACHE_KEY);
+            if (cached) {
+                try {
+                    const parsed = JSON.parse(cached);
+                    // 1小时过期 time < 3600000
+                    if (Date.now() - parsed.timestamp < 3600000) {
+                        updateStatsUI(parsed.data);
+                        return;
+                    }
+                } catch (e) { localStorage.removeItem(CACHE_KEY); }
+            }
+
+            const queries = [
+                // Commits - 这是一个近似值，通过搜索 API 获取
+                { key: 'commits', url: `https://api.github.com/search/commits?q=author:${GITHUB_USERNAME}&sort=author-date&order=desc`, headers: {'Accept': 'application/vnd.github.cloak-preview'} },
+                // Code Review - 搜索 review 过的 PR
+                { key: 'reviews', url: `https://api.github.com/search/issues?q=reviewed-by:${GITHUB_USERNAME}+type:pr` },
+                // Pull Requests - 用户创建的 PR
+                { key: 'prs', url: `https://api.github.com/search/issues?q=author:${GITHUB_USERNAME}+type:pr` },
+                // Issues - 用户创建的 Issue
+                { key: 'issues', url: `https://api.github.com/search/issues?q=author:${GITHUB_USERNAME}+type:issue` }
+            ];
+
+            try {
+                // 使用 Promise.allSettled 允许部分失败
+                const results = await Promise.allSettled(queries.map(q => 
+                    fetch(q.url, { headers: q.headers || {} })
+                        .then(r => {
+                            if (!r.ok) throw new Error(r.status);
+                            return r.json();
+                        })
+                        .then(data => ({ key: q.key, count: data.total_count }))
+                ));
+
+                const stats = {};
+                results.forEach((res, index) => {
+                    const key = queries[index].key;
+                    if (res.status === 'fulfilled') {
+                        stats[key] = res.value.count;
+                    } else {
+                        console.warn(`Failed to fetch ${key}:`, res.reason);
+                        stats[key] = '-'; // 失败或受限
+                    }
+                });
+
+                // 更新 UI 并缓存
+                updateStatsUI(stats);
+                localStorage.setItem(CACHE_KEY, JSON.stringify({
+                    timestamp: Date.now(),
+                    data: stats
+                }));
+
+            } catch (err) {
+                console.error('Stats fetch error:', err);
+                if (statsLoading) statsLoading.textContent = 'Data unavailable (API Rate Limit)';
+            }
+        }
+
+        function updateStatsUI(data) {
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                // Handle commit count fallback if it failed but others succeeded
+                if (id === 'stat-commits' && val === '-') { 
+                     if (el) el.textContent = 'N/A'; 
+                     return;
+                }
+                if (el) el.textContent = val;
+            };
+
+            setVal('stat-commits', data.commits);
+            setVal('stat-reviews', data.reviews);
+            setVal('stat-prs', data.prs);
+            setVal('stat-issues', data.issues);
+
+            const loader = document.getElementById('stats-loading');
+            const grid = document.getElementById('stats-grid');
+            if (loader) loader.style.display = 'none';
+            if (grid) grid.style.display = 'grid';
+        }
+
+        /**
          * 改进的获取数据函数
          * 移除了不可靠的镜像 API，直接使用官方 API 并增加异常捕捉
          */
         async function fetchGitHubData() {
+            // fetchContributionStats called in init
             const repoContainer = document.getElementById('repo-container');
             const loading = document.getElementById('loading');
             const error = document.getElementById('error');
@@ -283,7 +439,16 @@
         }
 
         // 初始化加载
-        window.addEventListener('DOMContentLoaded', fetchGitHubData);
+        async function init() {
+            try {
+                // Fetch stats and repos in parallel
+                await Promise.all([fetchContributionStats(), fetchGitHubData()]);
+            } catch (err) {
+                console.error('Initialization error:', err);
+            }
+        }
+        
+        window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>

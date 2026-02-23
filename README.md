@@ -1,24 +1,41 @@
 # Verginius.github.io
 
-My personal portfolio and repository hub, designed with a minimalist, retro-terminal aesthetic. This static site automatically fetches and displays my original projects from GitHub.
+A minimalist personal portfolio and data visualization hub, designed with a retro-terminal aesthetic. This static site automatically fetches and displays data from various platforms to showcase my work in development, photography, and translation.
 
 ## 🌟 Features
 
-- **Dynamic Content**: Uses the [GitHub API](https://docs.github.com/en/rest) to fetch user profile information and repository lists.
-- **Smart Filtering**: Automatically displays only original repositories (excluding forks).
-- **Responsive Design**: Adapts layout for desktop and mobile screens.
-- **Theme Support**: Automatically respects system dark/light mode preferences.
-- **Typography**: Uses `JetBrains Mono` and `Fira Code` for a consistent coding environment feel.
+### 1. Repositories (GitHub Integration)
+- **Dynamic Stats**: Visualizes contribution data including Commits, Code Reviews, Pull Requests, and Issues.
+- **Auto-Fetching**: Uses the [GitHub API](https://docs.github.com/en/rest) to fetch and filter original repositories.
+- **Smart Caching**: Implements local storage caching to minimize API rate limit hits.
+
+### 2. Photography Portfolio
+- **Gallery Layout**: Features a "Hero Image" layout with a main viewing area and a thumbnail strip.
+- **Interactive**: rapid switching between photos and full-screen viewing.
+- **Pagination**: Client-side pagination for browsing photo collections.
+
+### 3. Translations (ParaTranz Integration)
+- **Project Tracking**: Fetches real-time data from the [ParaTranz API](https://paratranz.cn/).
+- **User Stats**: Displays aggregate statistics for translations, edits, reviews, and comments.
+- **CORS Handling**: Intelligent fallback mechanism using proxies (CodeTabs) to bypass CORS restrictions for static sites.
+
+### 4. Design & Core
+- **Aesthetic**: Minimalist Black & White theme using `JetBrains Mono` and `Fira Code` fonts.
+- **Responsive**: Fully responsive grid layouts adapting to mobile and desktop.
+- **Dark Mode**: Automatic system theme detection.
 
 ## 🛠️ Tech Stack
 
-- **HTML5**: Semantic structure.
-- **CSS3**: Custom styling with CSS Variables for theming and Flexbox/Grid for layout.
-- **JavaScript (ES6+)**: Vanilla JS for API fetching and DOM manipulation (No frameworks required).
+- **HTML5**: Semantic structure split across multiple pages (`repositories`, `photography`, `translations`).
+- **CSS3**: Custom CSS Variables, Grid/Flexbox layouts, and animations.
+- **JavaScript (ES6+)**: 
+  - Vanilla JS (No frameworks).
+  - `fetch` API with `Promise.all` / `Promise.allSettled` for parallel data loading.
+  - Proxy integration for cross-origin requests.
 
 ## 🚀 Usage
 
-This project is tailored for GitHub Pages.
+This project is hosted on GitHub Pages.
 
 1. **Clone the repository**:
    ```bash
@@ -26,11 +43,13 @@ This project is tailored for GitHub Pages.
    ```
 
 2. **Open locally**:
-   Simply open `index.html` in your web browser to view the site. Note that GitHub API rate limits may be stricter when running locally without authentication.
+   - You can open `index.html` (which redirects to `repositories.html`) or specific pages in your browser.
+   - **Note on CORS**: The Translations module may require a local server or the proxy fallback to work correctly due to browser security policies.
 
 3. **Customization**:
-   - Update the `GITHUB_USERNAME` constant in the `<script>` section of `index.html` to display your own repositories.
-   - Modify CSS variables in the `:root` section to change the color scheme.
+   - `repositories.html`: Update `GITHUB_USERNAME`.
+   - `translations.html`: Update `USER_ID`.
+   - `photography.html`: Update the `photoFiles` array.
 
 ## 📄 License
 
