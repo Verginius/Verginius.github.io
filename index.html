@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verginius | Repository Hub</title>
+    <!-- 引用等宽字体增强复古感 -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&family=JetBrains+Mono:wght@200;400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --dim-color: #666666;
+            --border-style: 1px solid #000000;
+            --hover-bg: #f0f0f0;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #000000;
+                --text-color: #ffffff;
+                --dim-color: #999999;
+                --border-style: 1px solid #ffffff;
+                --hover-bg: #1a1a1a;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            line-height: 1.6;
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        header {
+            border-bottom: var(--border-style);
+            padding-bottom: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 200;
+            letter-spacing: -1px;
+            text-transform: uppercase;
+        }
+
+        .bio {
+            margin-top: 1rem;
+            color: var(--dim-color);
+            font-size: 0.9rem;
+        }
+
+        .nav-links {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav-links a {
+            color: var(--text-color);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            font-size: 0.85rem;
+        }
+
+        .nav-links a:hover {
+            border-bottom: var(--border-style);
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: var(--text-color);
+            margin-left: 1rem;
+            opacity: 0.3;
+        }
+
+        #repo-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .repo-card {
+            border: var(--border-style);
+            padding: 1.5rem;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .repo-card:hover {
+            background-color: var(--hover-bg);
+            transform: translateX(5px);
+        }
+
+        .repo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.5rem;
+        }
+
+        .repo-name {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .repo-stats {
+            font-size: 0.8rem;
+            color: var(--dim-color);
+        }
+
+        .repo-desc {
+            font-size: 0.85rem;
+            color: var(--dim-color);
+            max-width: 80%;
+        }
+
+        .repo-lang {
+            margin-top: 1rem;
+            display: inline-block;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border: var(--border-style);
+            opacity: 0.7;
+        }
+
+        #loading, #error {
+            padding: 2rem;
+            text-align: center;
+            font-style: italic;
+            color: var(--dim-color);
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 1rem;
+            border-top: var(--border-style);
+            font-size: 0.7rem;
+            color: var(--dim-color);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* 极简滚动条 */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--text-color);
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 1rem; }
+            h1 { font-size: 1.8rem; }
+            .repo-header { flex-direction: column; }
+            .repo-stats { margin-top: 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1 id="username">LI Zhengxuan</h1>
+        <p class="bio" id="user-bio">正在从 GitHub 获取开发者简介...</p>
+        <div class="nav-links">
+            <a href="https://github.com/Verginius" target="_blank">GITHUB</a>
+            <a href="mailto:contact@example.com">EMAIL</a>
+            <a href="#" onclick="location.reload()">REFRESH</a>
+        </div>
+    </header>
+
+    <main>
+        <div class="section-title">ORIGINAL REPOSITORIES</div>
+        <div id="loading">正在扫描原创仓库...</div>
+        <div id="error" style="display: none;">无法加载数据，可能是由于 GitHub API 速率限制。请稍后再试或直接访问 GitHub。</div>
+        <div id="repo-container"></div>
+    </main>
+
+    <footer>
+        <span>&copy; <span id="year"></span> VERGINIUS</span>
+        <span>GENERATED VIA GITHUB API</span>
+    </footer>
+
+    <script>
+        const GITHUB_USERNAME = 'Verginius';
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        /**
+         * 改进的获取数据函数
+         * 移除了不可靠的镜像 API，直接使用官方 API 并增加异常捕捉
+         */
+        async function fetchGitHubData() {
+            const repoContainer = document.getElementById('repo-container');
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const bioElement = document.getElementById('user-bio');
+
+            try {
+                // 1. 获取用户信息
+                const userResponse = await fetch(`https://api.github.com/users/${GITHUB_USERNAME}`);
+                if (userResponse.ok) {
+                    const userData = await userResponse.json();
+                    bioElement.textContent = userData.bio || "Independent Developer & Security Researcher.";
+                } else {
+                    bioElement.textContent = "Independent Developer & Security Researcher.";
+                }
+
+                // 2. 获取仓库列表 - 强制使用官方 API 以避免 CORS 问题
+                const repoResponse = await fetch(`https://api.github.com/users/${GITHUB_USERNAME}/repos?per_page=100&sort=updated`);
+
+                if (!repoResponse.ok) {
+                    throw new Error(`GitHub API returned ${repoResponse.status}`);
+                }
+
+                const repos = await repoResponse.json();
+
+                // 3. 过滤出原创仓库 (fork === false)
+                const originalRepos = repos.filter(repo => !repo.fork);
+
+                loading.style.display = 'none';
+
+                if (originalRepos.length === 0) {
+                    repoContainer.innerHTML = '<p style="text-align:center; color:var(--dim-color);">没有找到原创仓库。</p>';
+                    return;
+                }
+
+                // 渲染
+                originalRepos.forEach(repo => {
+                    const card = document.createElement('a');
+                    card.className = 'repo-card';
+                    card.href = repo.html_url;
+                    card.target = '_blank';
+
+                    card.innerHTML = `
+                        <div class="repo-header">
+                            <span class="repo-name">${repo.name.toUpperCase()}</span>
+                            <span class="repo-stats">★ ${repo.stargazers_count} / ${repo.language || 'Plain'}</span>
+                        </div>
+                        <p class="repo-desc">${repo.description || 'No description available for this repository.'}</p>
+                        ${repo.language ? `<span class="repo-lang">${repo.language}</span>` : ''}
+                    `;
+                    repoContainer.appendChild(card);
+                });
+
+            } catch (err) {
+                console.error('Fetch error:', err);
+                loading.style.display = 'none';
+                error.style.display = 'block';
+                // 提供回退显示
+                repoContainer.innerHTML = `
+                    <p style="text-align:center; margin-top:1rem;">
+                        <a href="https://github.com/${GITHUB_USERNAME}?tab=repositories" target="_blank" style="color:var(--text-color);">
+                            请点击此处直接前往 GitHub 查看仓库列表列表内容
+                        </a>
+                    </p>
+                `;
+            }
+        }
+
+        // 初始化加载
+        window.addEventListener('DOMContentLoaded', fetchGitHubData);
+    </script>
+</body>
+</html>
