@@ -104,33 +104,71 @@
         #photo-layout {
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
+            gap: 2rem;
+            align-items: center; /* Center the featured image */
         }
 
-        #photo-container {
+        #featured-wrapper {
+            width: 100%;
+            max-width: 800px; /* Limit max width for better viewing on large screens */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--hover-bg);
+            border: var(--border-style);
+            padding: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            min-height: 400px; /* Reserve space to prevent layout jump */
+        }
+
+        #featured-image {
+            max-width: 100%;
+            max-height: 70vh; /* Don't be too tall */
+            object-fit: contain;
+            cursor: zoom-in; /* Indicate full size view */
+            transition: opacity 0.3s ease;
+        }
+
+        #thumbnails-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(5, 1fr); /* 5 columns for the remaining photos */
+            gap: 1rem;
+            width: 100%;
         }
 
-        .photo-card {
+        .thumbnail-card {
             border: var(--border-style);
             aspect-ratio: 4/3;
             overflow: hidden;
-            position: relative;
             background-color: var(--hover-bg);
+            cursor: pointer;
+            opacity: 0.8;
+            transition: all 0.2s ease;
         }
 
-        .photo-card img {
+        .thumbnail-card:hover {
+            opacity: 1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .thumbnail-card img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transition: transform 0.3s ease;
             display: block; 
         }
 
-        .photo-card:hover img {
-            transform: scale(1.05);
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
+            #thumbnails-container {
+                grid-template-columns: repeat(3, 1fr); /* 3 cols on mobile */
+                gap: 0.5rem;
+            }
+            #featured-wrapper {
+                padding: 0.5rem;
+                min-height: 300px;
+            }
         }
         
         .pagination {
@@ -213,8 +251,11 @@
     <main>
         <div class="section-title">PHOTOGRAPHY</div>
         <div id="photo-layout">
-            <div id="photo-container">
-                <!-- Images will be loaded here -->
+            <div id="featured-wrapper">
+                <img id="featured-image" alt="Featured Work" onclick="viewFullSize()">
+            </div>
+            <div id="thumbnails-container">
+                <!-- 5 items will be loaded here -->
             </div>
             <div class="pagination">
                 <button id="prev-btn" onclick="changePage(-1)">PREV</button>
@@ -247,29 +288,55 @@
 
         const itemsPerPage = 6;
         let currentPage = 1;
+        let currentFeaturedIndex = 0; // Index within the current page (0-5)
 
         function renderPhotos() {
-            const container = document.getElementById('photo-container');
-            container.innerHTML = '';
-            
             const start = (currentPage - 1) * itemsPerPage;
             const end = start + itemsPerPage;
             const pageItems = photoFiles.slice(start, end);
             
-            pageItems.forEach(filename => {
+            if (pageItems.length === 0) return;
+
+            // Ensure index is valid for last page where items might be fewer than 6
+            if (currentFeaturedIndex >= pageItems.length) {
+                currentFeaturedIndex = 0;
+            }
+
+            // 1. Render Featured Image
+            const featuredImg = document.getElementById('featured-image');
+            const currentFilename = pageItems[currentFeaturedIndex];
+            
+            // Fade effect for smoother transition
+            featuredImg.style.opacity = 0.5;
+            setTimeout(() => {
+                featuredImg.src = `photography/${currentFilename}`;
+                featuredImg.alt = currentFilename;
+                featuredImg.style.opacity = 1;
+            }, 100);
+
+            // 2. Render Thumbnails (remaining 5)
+            const thumbsContainer = document.getElementById('thumbnails-container');
+            thumbsContainer.innerHTML = ''; // Clear previous thumbnails
+
+            pageItems.forEach((filename, index) => {
+                // Skip the currently featured one
+                if (index === currentFeaturedIndex) return;
+
                 const card = document.createElement('div');
-                card.className = 'photo-card';
+                card.className = 'thumbnail-card';
                 card.innerHTML = `<img src="photography/${filename}" alt="${filename}" loading="lazy">`;
                 
-                // Add click to view full size
-                card.onclick = () => window.open(`photography/${filename}`, '_blank');
-                card.style.cursor = 'pointer';
-                card.title = 'Click to view full size';
+                // Click to swap into featured view
+                card.onclick = () => {
+                    currentFeaturedIndex = index;
+                    renderPhotos(); // Re-render to update view
+                };
+                card.title = 'View larger';
 
-                container.appendChild(card);
+                thumbsContainer.appendChild(card);
             });
 
-            // Update buttons
+            // Update buttons state
             document.getElementById('prev-btn').disabled = currentPage === 1;
             document.getElementById('next-btn').disabled = end >= photoFiles.length;
             
@@ -280,7 +347,15 @@
 
         function changePage(delta) {
             currentPage += delta;
+            currentFeaturedIndex = 0; // Reset to first image on page change
             renderPhotos();
+        }
+
+        function viewFullSize() {
+            const featuredImg = document.getElementById('featured-image');
+            if (featuredImg.src) {
+                window.open(featuredImg.src, '_blank');
+            }
         }
 
         // 初始化加载
