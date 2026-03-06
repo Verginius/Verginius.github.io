@@ -4,7 +4,7 @@ A minimalist personal portfolio with a retro-terminal aesthetic. Built as a stat
 
 ## Pages
 
-| Page | URL | Description |
+| Page | File | Description |
 |---|---|---|
 | Resume | `index.html` | CV rendered from Markdown |
 | Repositories | `repositories.html` | GitHub repos & contribution stats |
@@ -13,31 +13,35 @@ A minimalist personal portfolio with a retro-terminal aesthetic. Built as a stat
 
 ## Features
 
+### Shared Layout (`assets/common.js` / `assets/common.css`)
+- Shared site header rendered by `common.js`: name, bio (education & skills), and navigation links.
+- Navigation links: Resume, Repositories, Translations, Photography, GitHub, Email.
+- Active page highlighting applied automatically based on `window.location.pathname`.
+- Black & White minimalist theme, `JetBrains Mono` / `Fira Code` fonts (Google Fonts).
+- CSS Variables with automatic dark mode (`prefers-color-scheme: dark`).
+
 ### Resume
-- CV content stored in `assets/data.db` (SQLite), rendered via `marked.js`.
+- CV Markdown stored in `assets/data.db` (SQLite `documents` table), fetched and rendered via `marked.js`.
 
 ### Repositories (GitHub API)
-- Fetches original repos and contribution stats (Commits, PRs, Reviews, Issues).
-- Local storage caching (1 hour) to reduce API rate limit hits.
+- Fetches original repos and contribution stats (Commits, PRs, Reviews, Issues) for `Verginius`.
+- `localStorage` caching (1 hour TTL) to reduce GitHub API rate limit hits.
 
 ### Photography
-- Hero image + thumbnail strip layout with client-side pagination.
-- Images stored compressed in `assets/data.db` (114 MB originals → 8.3 MB).
+- Hero image + thumbnail strip layout with client-side pagination (6 photos per page).
+- Photos sorted by filename in descending order.
+- Images stored compressed in `assets/data.db` (max 1920px, JPEG quality 75).
 - Loaded at runtime via `sql.js` as Blob URLs — no image files committed to the repo.
+- Current `data.db` size: **8.3 MB**.
 
 ### Translations (ParaTranz API)
-- Fetches user stats and project list from ParaTranz.
-- CORS fallback via CodeTabs proxy.
-
-### Design
-- Black & White minimalist theme, `JetBrains Mono` / `Fira Code` fonts.
-- CSS Variables with automatic dark mode (`prefers-color-scheme`).
-- Responsive grid layouts for mobile and desktop.
+- Fetches user stats and project list from ParaTranz for user `2888`.
+- CORS fallback via [CodeTabs proxy](https://api.codetabs.com/v1/proxy).
 
 ## Tech Stack
 
 - **HTML5 / CSS3 / Vanilla JS (ES6+)** — no frameworks
-- **sql.js** — SQLite in the browser (WebAssembly)
+- **sql.js v1.10.3** — SQLite in the browser (WebAssembly)
 - **marked.js** — Markdown → HTML rendering
 - **GitHub API / ParaTranz API** — dynamic data
 
@@ -60,7 +64,7 @@ build_db.py
 
 **Files committed:**
 ```
-assets/data.db   ← the only binary asset (~8 MB)
+assets/data.db   ← the only binary asset (currently ~8.3 MB)
 ```
 
 ## Local Development
@@ -73,11 +77,4 @@ python -m http.server 8080
 ```
 
 Then open `http://localhost:8080`.
-
-## Updating Content
-
-- **CV**: Edit `docs/LI Zhengxuan_Cpp_CV.md`, then run `python build_db.py` and commit `assets/data.db`.
-- **Photos**: Add/remove files in `photography/`, then run `python build_db.py` and commit `assets/data.db`.
-- **GitHub username**: Update `GITHUB_USERNAME` in `repositories.html`.
-- **ParaTranz user**: Update `USER_ID` in `translations.html`.
 
