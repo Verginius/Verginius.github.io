@@ -17,7 +17,7 @@
         if (!header) return;
         header.innerHTML =
             '\n        <h1>LI Zhengxuan</h1>' +
-            '\n        <p class="bio">2025-2026 City University of Hong Kong <br> 2018-2022 China University of Geosciences(Beijing) <br> C++/Computer Graphics/Machine Learning/Web 3</p>' +
+            '\n        <p class="bio">2025-2026 City University of Hong Kong <br> 2018-2022 China University of Geosciences(Beijing) <br> C++/Computer Graphics/Computer Vision/Machine Learning/Web 3</p>' +
             '\n        <div class="nav-links">' +
             '\n            ' + navLinks +
             '\n            <a href="https://github.com/Verginius" target="_blank">GITHUB</a>' +
