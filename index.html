@@ -94,173 +94,76 @@
             opacity: 0.3;
         }
 
-        #repo-container {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1rem;
+        .nav-links a.active {
+            border-bottom: var(--border-style);
         }
 
-        .repo-card {
-            border: var(--border-style);
-            padding: 1.5rem;
-            text-decoration: none;
-            color: inherit;
-            transition: all 0.2s ease;
-            position: relative;
-            overflow: hidden;
+        .nav-links a {
+            cursor: pointer;
         }
 
-        .repo-card:hover {
-            background-color: var(--hover-bg);
-            transform: translateX(5px);
-        }
-
-        .repo-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
+        /* CV / Markdown Styles */
+        #cv-content h1 {
+            font-size: 1.8rem;
+            font-weight: 200;
+            letter-spacing: -1px;
+            text-transform: uppercase;
             margin-bottom: 0.5rem;
         }
 
-        .repo-name {
+        #cv-content h2 {
             font-size: 1.1rem;
+            font-weight: 400;
+            text-transform: uppercase;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.3rem;
+            border-bottom: var(--border-style);
+        }
+
+        #cv-content h3 {
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-top: 1.2rem;
+            margin-bottom: 0.2rem;
+        }
+
+        #cv-content p {
+            font-size: 0.85rem;
+            color: var(--dim-color);
+            margin-bottom: 0.4rem;
+        }
+
+        #cv-content ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        #cv-content ul li {
+            font-size: 0.85rem;
+            color: var(--dim-color);
+            padding-left: 1rem;
+            margin-bottom: 0.3rem;
+            position: relative;
+        }
+
+        #cv-content ul li::before {
+            content: "—";
+            position: absolute;
+            left: 0;
+            opacity: 0.4;
+        }
+
+        #cv-content strong {
+            color: var(--text-color);
             font-weight: 500;
         }
 
-        .repo-stats {
-            font-size: 0.8rem;
-            color: var(--dim-color);
-        }
-
-        .repo-desc {
-            font-size: 0.85rem;
-            color: var(--dim-color);
-            max-width: 80%;
-        }
-
-        .repo-lang {
-            margin-top: 1rem;
-            display: inline-block;
-            font-size: 0.7rem;
-            padding: 2px 8px;
-            border: var(--border-style);
-            opacity: 0.7;
-        }
-
-        #loading, #error {
+        #cv-loading {
             padding: 2rem;
             text-align: center;
             font-style: italic;
             color: var(--dim-color);
-        }
-
-        footer {
-            margin-top: 4rem;
-            padding-top: 1rem;
-            border-top: var(--border-style);
-            font-size: 0.7rem;
-            color: var(--dim-color);
-            display: flex;
-            justify-content: space-between;
-        }
-
-        /* 极简滚动条 */
-        ::-webkit-scrollbar {
-            width: 5px;
-        }
-        ::-webkit-scrollbar-track {
-            background: var(--bg-color);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: var(--text-color);
-        }
-
-        @media (max-width: 600px) {
-            body { padding: 1rem; }
-            h1 { font-size: 1.8rem; }
-            .repo-header { flex-direction: column; }
-            .repo-stats { margin-top: 0.5rem; }
-        }
-
-        /* Photography Section Styles */
-        #photo-layout {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        #photo-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .photo-card {
-            border: var(--border-style);
-            aspect-ratio: 4/3;
-            overflow: hidden;
-            position: relative;
-            background-color: var(--hover-bg);
-        }
-
-        .photo-card img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-            display: block; 
-        }
-
-        .photo-card:hover img {
-            transform: scale(1.05);
-        }
-        
-        .pagination {
-            display: flex;
-            justify-content: center;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .pagination button {
-            background: none;
-            border: var(--border-style);
-            color: var(--text-color);
-            padding: 0.5rem 1rem;
-            cursor: pointer;
-            font-family: inherit;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-        }
-
-        .pagination button:hover:not(:disabled) {
-            background-color: var(--text-color);
-            color: var(--bg-color);
-        }
-        
-        .pagination button:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-            border-color: var(--dim-color);
-        }
-        
-        .pagination-info {
-            text-align: center; 
-            font-size: 0.8rem;
-            color: var(--dim-color);
-            margin-top: 0.5rem;
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        .nav-links a.active {
-            border-bottom: var(--border-style);
-        }
-        
-        .nav-links a {
-            cursor: pointer;
         }
     </style>
 </head>
@@ -280,30 +183,26 @@
     </header>
 
     <main>
-        <div id="section-photos" class="hidden">
-            <div class="section-title">PHOTOGRAPHY</div>
-            <div id="photo-layout">
-                <div id="photo-container">
-                    <!-- Images will be loaded here -->
-                </div>
-                <div class="pagination">
-                    <button id="prev-btn" onclick="changePage(-1)">PREV</button>
-                    <button id="next-btn" onclick="changePage(1)">NEXT</button>
-                </div>
-                <div id="page-info" class="pagination-info">Page 1</div>
-            </div>
-        </div>
-
-        <div id="section-repos">
-
-        <div id="section-repos">
-            <div class="section-title">ORIGINAL REPOSITORIES</div>
-            <div id="loading">正在扫描原创仓库...</div>
-            <div id="error" style="display: none;">无法加载数据，可能是由于 GitHub API 速率限制。请稍后再试或直接访问 GitHub。</div>
-            <div id="repo-container"></div>
-        </div>
+        <div id="cv-loading">Loading resume...</div>
+        <div id="cv-content"></div>
     </main>
 
+    <footer>
+        <span>&copy; <span id="year"></span> VERGINIUS</span>
+        <span>LI ZHENGXUAN</span>
+    </footer>
 
-</body>
-</html>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        fetch('docs/LI Zhengxuan_Cpp_CV.md')
+            .then(r => r.text())
+            .then(md => {
+                document.getElementById('cv-loading').style.display = 'none';
+                document.getElementById('cv-content').innerHTML = marked.parse(md);
+            })
+            .catch(() => {
+                document.getElementById('cv-loading').textContent = 'Unable to load resume.';
+            });
+    </script>
