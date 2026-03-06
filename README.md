@@ -1,56 +1,83 @@
 # Verginius.github.io
 
-A minimalist personal portfolio and data visualization hub, designed with a retro-terminal aesthetic. This static site automatically fetches and displays data from various platforms to showcase my work in development, photography, and translation.
+A minimalist personal portfolio with a retro-terminal aesthetic. Built as a static site hosted on GitHub Pages.
 
-## 🌟 Features
+## Pages
 
-### 1. Repositories (GitHub Integration)
-- **Dynamic Stats**: Visualizes contribution data including Commits, Code Reviews, Pull Requests, and Issues.
-- **Auto-Fetching**: Uses the [GitHub API](https://docs.github.com/en/rest) to fetch and filter original repositories.
-- **Smart Caching**: Implements local storage caching to minimize API rate limit hits.
+| Page | URL | Description |
+|---|---|---|
+| Resume | `index.html` | CV rendered from Markdown |
+| Repositories | `repositories.html` | GitHub repos & contribution stats |
+| Translations | `translations.html` | ParaTranz translation projects |
+| Photography | `photography.html` | Photo gallery |
 
-### 2. Photography Portfolio
-- **Gallery Layout**: Features a "Hero Image" layout with a main viewing area and a thumbnail strip.
-- **Interactive**: rapid switching between photos and full-screen viewing.
-- **Pagination**: Client-side pagination for browsing photo collections.
+## Features
 
-### 3. Translations (ParaTranz Integration)
-- **Project Tracking**: Fetches real-time data from the [ParaTranz API](https://paratranz.cn/).
-- **User Stats**: Displays aggregate statistics for translations, edits, reviews, and comments.
-- **CORS Handling**: Intelligent fallback mechanism using proxies (CodeTabs) to bypass CORS restrictions for static sites.
+### Resume
+- CV content stored in `assets/data.db` (SQLite), rendered via `marked.js`.
 
-### 4. Design & Core
-- **Aesthetic**: Minimalist Black & White theme using `JetBrains Mono` and `Fira Code` fonts.
-- **Responsive**: Fully responsive grid layouts adapting to mobile and desktop.
-- **Dark Mode**: Automatic system theme detection.
+### Repositories (GitHub API)
+- Fetches original repos and contribution stats (Commits, PRs, Reviews, Issues).
+- Local storage caching (1 hour) to reduce API rate limit hits.
 
-## 🛠️ Tech Stack
+### Photography
+- Hero image + thumbnail strip layout with client-side pagination.
+- Images stored compressed in `assets/data.db` (114 MB originals → 8.3 MB).
+- Loaded at runtime via `sql.js` as Blob URLs — no image files committed to the repo.
 
-- **HTML5**: Semantic structure split across multiple pages (`repositories`, `photography`, `translations`).
-- **CSS3**: Custom CSS Variables, Grid/Flexbox layouts, and animations.
-- **JavaScript (ES6+)**: 
-  - Vanilla JS (No frameworks).
-  - `fetch` API with `Promise.all` / `Promise.allSettled` for parallel data loading.
-  - Proxy integration for cross-origin requests.
+### Translations (ParaTranz API)
+- Fetches user stats and project list from ParaTranz.
+- CORS fallback via CodeTabs proxy.
 
-## 🚀 Usage
+### Design
+- Black & White minimalist theme, `JetBrains Mono` / `Fira Code` fonts.
+- CSS Variables with automatic dark mode (`prefers-color-scheme`).
+- Responsive grid layouts for mobile and desktop.
 
-This project is hosted on GitHub Pages.
+## Tech Stack
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/Verginius/Verginius.github.io.git
-   ```
+- **HTML5 / CSS3 / Vanilla JS (ES6+)** — no frameworks
+- **sql.js** — SQLite in the browser (WebAssembly)
+- **marked.js** — Markdown → HTML rendering
+- **GitHub API / ParaTranz API** — dynamic data
 
-2. **Open locally**:
-   - You can open `index.html` (which redirects to `repositories.html`) or specific pages in your browser.
-   - **Note on CORS**: The Translations module may require a local server or the proxy fallback to work correctly due to browser security policies.
+## Asset Pipeline
 
-3. **Customization**:
-   - `repositories.html`: Update `GITHUB_USERNAME`.
-   - `translations.html`: Update `USER_ID`.
-   - `photography.html`: Update the `photoFiles` array.
+Photos and CV are not committed directly. Instead, run the build script to pack them into the SQLite database:
 
-## 📄 License
+```bash
+python build_db.py
+```
 
-This project is open source. Feel free to use the code as a template for your own portfolio.
+This compresses photos (max 1920px, JPEG quality 75) and stores the CV Markdown into `assets/data.db`.
+
+**Files excluded from git** (see `.gitignore`):
+```
+docs/
+photography/
+build_db.py
+```
+
+**Files committed:**
+```
+assets/data.db   ← the only binary asset (~8 MB)
+```
+
+## Local Development
+
+Because `assets/data.db` is loaded via `fetch`, a local HTTP server is required (the `file://` protocol blocks it):
+
+```bash
+# Python
+python -m http.server 8080
+```
+
+Then open `http://localhost:8080`.
+
+## Updating Content
+
+- **CV**: Edit `docs/LI Zhengxuan_Cpp_CV.md`, then run `python build_db.py` and commit `assets/data.db`.
+- **Photos**: Add/remove files in `photography/`, then run `python build_db.py` and commit `assets/data.db`.
+- **GitHub username**: Update `GITHUB_USERNAME` in `repositories.html`.
+- **ParaTranz user**: Update `USER_ID` in `translations.html`.
+
