@@ -4,104 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verginius | Repository Hub</title>
-    <!-- 引用等宽字体增强复古感 -->
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&family=JetBrains+Mono:wght@200;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/common.css">
+    <script src="assets/common.js" defer></script>
     <style>
-        :root {
-            --bg-color: #ffffff;
-            --text-color: #000000;
-            --dim-color: #666666;
-            --border-style: 1px solid #000000;
-            --hover-bg: #f0f0f0;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-color: #000000;
-                --text-color: #ffffff;
-                --dim-color: #999999;
-                --border-style: 1px solid #ffffff;
-                --hover-bg: #1a1a1a;
-            }
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'JetBrains Mono', 'Fira Code', monospace;
-            line-height: 1.6;
-            padding: 2rem;
-            max-width: 900px;
-            margin: 0 auto;
-            transition: background 0.3s, color 0.3s;
-        }
-
-        header {
-            border-bottom: var(--border-style);
-            padding-bottom: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            font-weight: 200;
-            letter-spacing: -1px;
-            text-transform: uppercase;
-        }
-
-        .bio {
-            margin-top: 1rem;
-            color: var(--dim-color);
-            font-size: 0.9rem;
-        }
-
-        .nav-links {
-            margin-top: 1.5rem;
-            display: flex;
-            gap: 1.5rem;
-        }
-
-        .nav-links a {
-            color: var(--text-color);
-            text-decoration: none;
-            border-bottom: 1px solid transparent;
-            font-size: 0.85rem;
-        }
-
-        .nav-links a:hover {
-            border-bottom: var(--border-style);
-        }
-
-        .section-title {
-            font-size: 1.2rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-        }
-
-        .section-title::after {
-            content: "";
-            flex: 1;
-            height: 1px;
-            background: var(--text-color);
-            margin-left: 1rem;
-            opacity: 0.3;
-        }
-
-        .nav-links a.active {
-            border-bottom: var(--border-style);
-        }
-
-        .nav-links a {
-            cursor: pointer;
-        }
-
         /* CV / Markdown Styles */
         #cv-content h1 {
             font-size: 1.8rem;
@@ -169,18 +74,7 @@
 </head>
 <body>
 
-    <header>
-        <h1 id="username">LI Zhengxuan</h1>
-        <p class="bio" id="user-bio">2025-2026 City University of Hong Kong <br> 2018-2022 China University of Geosciences(Beijing) <br> C++/Computer Graphics/Machine Learning/Web 3</p>
-        <div class="nav-links">
-            <a href="index.html" id="nav-resume" class="active">RESUME</a>
-            <a href="repositories.html" id="nav-repos">REPOSITORIES</a>
-            <a href="translations.html" id="nav-trans">TRANSLATIONS</a>
-            <a href="photography.html" id="nav-photos">PHOTOGRAPHY</a>
-            <a href="https://github.com/Verginius" target="_blank">GITHUB</a>
-            <a href="mailto:lizhengxuan_2023@outlook.com">EMAIL</a>
-        </div>
-    </header>
+    <header id="site-header"></header>
 
     <main>
         <div id="cv-loading">Loading resume...</div>
@@ -195,8 +89,6 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
     <script>
-        document.getElementById('year').textContent = new Date().getFullYear();
-
         async function loadCV() {
             try {
                 const SQL = await initSqlJs({
