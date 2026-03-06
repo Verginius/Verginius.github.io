@@ -270,99 +270,101 @@
         <span>&copy; <span id="year"></span> VERGINIUS</span>
     </footer>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
 
-        // Photography Logic
-        const photoFiles = [
-            "IMG_20250505_142542.jpg", "IMG_20250505_144033.jpg", "IMG_20250506_114342.jpg",
-            "IMG_20250506_161453.jpg", "IMG_20250507_112455.jpg", "IMG_20250507_154108.jpg",
-            "IMG_20250507_200125.jpg", "IMG_20250508_170649.jpg", "IMG_20250508_171605.jpg",
-            "IMG_20250508_180214.jpg", "IMG_20250508_182846.jpg", "IMG_20250509_120431.jpg",
-            "IMG_20250718_160748.jpg", "IMG_20250719_172423.jpg", "IMG_20251120_142008.jpg",
-            "IMG_20251120_144931.jpg", "IMG_20251120_145450.jpg", "IMG_20251120_145537.jpg",
-            "IMG_20251120_145659.jpg", "IMG_20251120_151111.jpg", "IMG_20251120_151948.jpg",
-            "IMG_20251123_110636.jpg", "IMG_20251123_114250.jpg"
-        ];
-        
-        photoFiles.sort().reverse();
-
+        let db = null;
+        let photoFilenames = [];
+        const blobURLs = new Map();
         const itemsPerPage = 6;
         let currentPage = 1;
-        let currentFeaturedIndex = 0; // Index within the current page (0-5)
+        let currentFeaturedIndex = 0;
+
+        async function initDB() {
+            document.getElementById('page-info').textContent = 'Loading...';
+            document.getElementById('prev-btn').disabled = true;
+            document.getElementById('next-btn').disabled = true;
+            try {
+                const SQL = await initSqlJs({
+                    locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`
+                });
+                const response = await fetch('assets/data.db');
+                if (!response.ok) throw new Error('DB not found');
+                const buffer = await response.arrayBuffer();
+                db = new SQL.Database(new Uint8Array(buffer));
+
+                const result = db.exec('SELECT filename FROM photos ORDER BY filename DESC');
+                if (result.length > 0) {
+                    photoFilenames = result[0].values.map(row => row[0]);
+                }
+                renderPhotos();
+            } catch (err) {
+                document.getElementById('page-info').textContent = 'Failed to load photos.';
+                console.error(err);
+            }
+        }
+
+        function getImageURL(filename) {
+            if (blobURLs.has(filename)) return blobURLs.get(filename);
+            const result = db.exec('SELECT data FROM photos WHERE filename = ?', [filename]);
+            if (!result.length) return null;
+            const blob = new Blob([result[0].values[0][0]], { type: 'image/jpeg' });
+            const url = URL.createObjectURL(blob);
+            blobURLs.set(filename, url);
+            return url;
+        }
 
         function renderPhotos() {
+            if (!db) return;
             const start = (currentPage - 1) * itemsPerPage;
             const end = start + itemsPerPage;
-            const pageItems = photoFiles.slice(start, end);
-            
+            const pageItems = photoFilenames.slice(start, end);
             if (pageItems.length === 0) return;
+            if (currentFeaturedIndex >= pageItems.length) currentFeaturedIndex = 0;
 
-            // Ensure index is valid for last page where items might be fewer than 6
-            if (currentFeaturedIndex >= pageItems.length) {
-                currentFeaturedIndex = 0;
-            }
-
-            // 1. Render Featured Image
             const featuredImg = document.getElementById('featured-image');
-            const currentFilename = pageItems[currentFeaturedIndex];
-            
-            // Fade effect for smoother transition
             featuredImg.style.opacity = 0.5;
             setTimeout(() => {
-                featuredImg.src = `photography/${currentFilename}`;
-                featuredImg.alt = currentFilename;
+                featuredImg.src = getImageURL(pageItems[currentFeaturedIndex]);
+                featuredImg.alt = pageItems[currentFeaturedIndex];
                 featuredImg.style.opacity = 1;
             }, 100);
 
-            // 2. Render Thumbnails (remaining 5)
             const thumbsContainer = document.getElementById('thumbnails-container');
-            thumbsContainer.innerHTML = ''; // Clear previous thumbnails
-
+            thumbsContainer.innerHTML = '';
             pageItems.forEach((filename, index) => {
-                // Skip the currently featured one
                 if (index === currentFeaturedIndex) return;
-
                 const card = document.createElement('div');
                 card.className = 'thumbnail-card';
-                card.innerHTML = `<img src="photography/${filename}" alt="${filename}" loading="lazy">`;
-                
-                // Click to swap into featured view
-                card.onclick = () => {
-                    currentFeaturedIndex = index;
-                    renderPhotos(); // Re-render to update view
-                };
+                const img = document.createElement('img');
+                img.src = getImageURL(filename);
+                img.alt = filename;
+                img.loading = 'lazy';
+                card.appendChild(img);
+                card.onclick = () => { currentFeaturedIndex = index; renderPhotos(); };
                 card.title = 'View larger';
-
                 thumbsContainer.appendChild(card);
             });
 
-            // Update buttons state
             document.getElementById('prev-btn').disabled = currentPage === 1;
-            document.getElementById('next-btn').disabled = end >= photoFiles.length;
-            
-            // Update info
-            const totalPages = Math.ceil(photoFiles.length / itemsPerPage);
+            document.getElementById('next-btn').disabled = end >= photoFilenames.length;
+            const totalPages = Math.ceil(photoFilenames.length / itemsPerPage);
             document.getElementById('page-info').textContent = `PAGE ${currentPage} / ${totalPages}`;
         }
 
         function changePage(delta) {
             currentPage += delta;
-            currentFeaturedIndex = 0; // Reset to first image on page change
+            currentFeaturedIndex = 0;
             renderPhotos();
         }
 
         function viewFullSize() {
             const featuredImg = document.getElementById('featured-image');
-            if (featuredImg.src) {
-                window.open(featuredImg.src, '_blank');
-            }
+            if (featuredImg.src) window.open(featuredImg.src, '_blank');
         }
 
-        // 初始化加载
-        window.addEventListener('DOMContentLoaded', () => {
-             renderPhotos();
-        });
+        window.addEventListener('DOMContentLoaded', initDB);
     </script>
 </body>
 </html>

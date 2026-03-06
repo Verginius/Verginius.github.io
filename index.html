@@ -193,16 +193,30 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
 
-        fetch('docs/LI Zhengxuan_Cpp_CV.md')
-            .then(r => r.text())
-            .then(md => {
-                document.getElementById('cv-loading').style.display = 'none';
-                document.getElementById('cv-content').innerHTML = marked.parse(md);
-            })
-            .catch(() => {
+        async function loadCV() {
+            try {
+                const SQL = await initSqlJs({
+                    locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`
+                });
+                const response = await fetch('assets/data.db');
+                if (!response.ok) throw new Error('DB not found');
+                const buffer = await response.arrayBuffer();
+                const db = new SQL.Database(new Uint8Array(buffer));
+
+                const result = db.exec("SELECT content FROM documents WHERE name = 'cv'");
+                if (result.length > 0) {
+                    document.getElementById('cv-loading').style.display = 'none';
+                    document.getElementById('cv-content').innerHTML = marked.parse(result[0].values[0][0]);
+                }
+            } catch (err) {
                 document.getElementById('cv-loading').textContent = 'Unable to load resume.';
-            });
+                console.error(err);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadCV);
     </script>
