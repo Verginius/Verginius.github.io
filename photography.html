@@ -141,7 +141,7 @@
         <span>&copy; <span id="year"></span> VERGINIUS</span>
     </footer>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+    <script src="/js/sql/sql-wasm.js"></script>
     <script>
         let db = null;
         let photoFilenames = [];
@@ -156,7 +156,7 @@
             document.getElementById('next-btn').disabled = true;
             try {
                 const SQL = await initSqlJs({
-                    locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/${file}`
+                    locateFile: file => `/js/sql/${file}`
                 });
                 const response = await fetch('assets/data.db');
                 if (!response.ok) throw new Error('DB not found');

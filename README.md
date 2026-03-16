@@ -21,7 +21,7 @@ A minimalist personal portfolio with a retro-terminal aesthetic. Built as a stat
 - CSS Variables with automatic dark mode (`prefers-color-scheme: dark`).
 
 ### Resume
-- CV Markdown stored in `assets/data.db` (SQLite `documents` table), fetched and rendered via `marked.js`.
+- CV Markdown stored in `assets/data.db` (SQLite `documents` table), fetched and rendered via vendored `marked.js`.
 
 ### Repositories (GitHub API)
 - Fetches original repos and contribution stats (Commits, PRs, Reviews, Issues) for `Verginius`.
@@ -41,8 +41,8 @@ A minimalist personal portfolio with a retro-terminal aesthetic. Built as a stat
 ## Tech Stack
 
 - **HTML5 / CSS3 / Vanilla JS (ES6+)** — no frameworks
-- **sql.js v1.10.3** — SQLite in the browser (WebAssembly)
-- **marked.js** — Markdown → HTML rendering
+- **sql.js v1.10.3** — SQLite in the browser (WebAssembly), vendored under `js/sql/`
+- **marked.js** — Markdown → HTML rendering, vendored under `js/`
 - **GitHub API / ParaTranz API** — dynamic data
 
 ## Asset Pipeline
@@ -65,6 +65,9 @@ build_db.py
 **Files committed:**
 ```
 assets/data.db   ← the only binary asset (currently ~8.3 MB)
+js/marked.min.js
+js/sql/sql-wasm.js
+js/sql/sql-wasm.wasm
 ```
 
 ## Local Development
